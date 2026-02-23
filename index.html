@@ -43,12 +43,11 @@ body {
   overflow-x: hidden;
 }
 
-/* Swamp texture overlay */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: 
+  background:
     radial-gradient(ellipse at 20% 50%, rgba(42, 74, 50, 0.08) 0%, transparent 60%),
     radial-gradient(ellipse at 80% 20%, rgba(26, 47, 58, 0.06) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 80%, rgba(61, 46, 31, 0.05) 0%, transparent 40%);
@@ -56,7 +55,6 @@ body::before {
   z-index: 0;
 }
 
-/* Grain texture */
 body::after {
   content: '';
   position: fixed;
@@ -69,7 +67,6 @@ body::after {
 
 .page { position: relative; z-index: 2; }
 
-/* === HEADER === */
 header {
   padding: 2rem 3rem;
   display: flex;
@@ -86,16 +83,24 @@ header {
   text-decoration: none;
 }
 
-.header-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  font-weight: 300;
-  color: var(--moss-light);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
 }
 
-/* === HERO === */
+.nav-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--moss-light);
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover, .nav-links a.active { color: var(--gold); }
+
 .hero {
   padding: 8rem 3rem 6rem;
   max-width: 900px;
@@ -152,6 +157,7 @@ h1 em {
   gap: 2.5rem;
   padding-left: 2rem;
   margin-top: 3rem;
+  flex-wrap: wrap;
 }
 
 .rule {
@@ -176,7 +182,6 @@ h1 em {
   letter-spacing: 0.1em;
 }
 
-/* === DIVIDER === */
 .divider {
   height: 1px;
   background: linear-gradient(to right, var(--moss), var(--bayou-blue), transparent);
@@ -184,7 +189,6 @@ h1 em {
   opacity: 0.25;
 }
 
-/* === WHAT IT IS === */
 .what {
   padding: 5rem 3rem;
   display: grid;
@@ -218,7 +222,6 @@ h1 em {
   max-width: 600px;
 }
 
-/* === ARCHITECTURE === */
 .arch {
   padding: 5rem 3rem;
   max-width: 1100px;
@@ -267,7 +270,22 @@ h1 em {
   line-height: 1.6;
 }
 
-/* === CLAIMS === */
+.arch-cta {
+  margin-top: 2rem;
+  text-align: right;
+}
+
+.arch-cta a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--gold-dim);
+  text-decoration: none;
+  letter-spacing: 0.08em;
+  transition: color 0.2s;
+}
+
+.arch-cta a:hover { color: var(--gold); }
+
 .claims {
   padding: 5rem 3rem;
   display: grid;
@@ -308,7 +326,6 @@ h1 em {
   font-weight: 400;
 }
 
-/* === SELF-MOD === */
 .selfmod {
   padding: 5rem 3rem;
   display: grid;
@@ -361,7 +378,72 @@ h1 em {
   line-height: 1.6;
 }
 
-/* === ETHOS === */
+.proposals {
+  padding: 5rem 3rem;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 3rem;
+  max-width: 1100px;
+}
+
+.proposals-content h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 2rem;
+  font-weight: 400;
+  color: var(--bone);
+  margin-bottom: 1.5rem;
+}
+
+.proposals-content p {
+  color: var(--fog);
+  font-size: 0.95rem;
+  margin-bottom: 1.2rem;
+  max-width: 600px;
+}
+
+.tier-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px;
+  margin-top: 2rem;
+  background: rgba(42, 74, 50, 0.1);
+  border: 1px solid rgba(42, 74, 50, 0.12);
+}
+
+.tier-cell {
+  background: var(--swamp-deep);
+  padding: 1.8rem 1.5rem;
+  transition: background 0.3s ease;
+}
+
+.tier-cell:hover {
+  background: rgba(42, 74, 50, 0.08);
+}
+
+.tier-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 400;
+  color: var(--gold-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.8rem;
+}
+
+.tier-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.15rem;
+  color: var(--bone);
+  margin-bottom: 0.5rem;
+}
+
+.tier-desc {
+  font-size: 0.75rem;
+  color: var(--fog);
+  opacity: 0.7;
+  line-height: 1.6;
+}
+
 .ethos {
   padding: 6rem 3rem;
   max-width: 750px;
@@ -388,7 +470,6 @@ h1 em {
   padding-left: 2rem;
 }
 
-/* === FOOTER === */
 footer {
   padding: 3rem;
   border-top: 1px solid rgba(42, 74, 50, 0.12);
@@ -419,11 +500,8 @@ footer {
   transition: color 0.2s;
 }
 
-.footer-right a:hover {
-  color: var(--gold);
-}
+.footer-right a:hover { color: var(--gold); }
 
-/* === ANIMATIONS === */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -437,23 +515,24 @@ h1 { animation-delay: 0.25s; }
 .hero-sub { animation-delay: 0.4s; }
 .hero-rules { animation-delay: 0.55s; }
 
-/* === RESPONSIVE === */
 @media (max-width: 768px) {
   header { padding: 1.5rem; }
   .hero { padding: 5rem 1.5rem 4rem; }
   .hero::before { left: 1.5rem; top: 3rem; }
   .hero-rules { flex-direction: column; gap: 1.2rem; }
-  .what, .claims, .selfmod { 
-    grid-template-columns: 1fr; 
+  .what, .claims, .selfmod, .proposals {
+    grid-template-columns: 1fr;
     padding: 3rem 1.5rem;
     gap: 1.5rem;
   }
   .arch { padding: 3rem 1.5rem; }
   .arch-grid { grid-template-columns: 1fr; }
+  .tier-grid { grid-template-columns: 1fr; }
   .ethos { padding: 4rem 1.5rem; }
   .ethos blockquote { font-size: 1.3rem; }
   footer { padding: 2rem 1.5rem; flex-direction: column; gap: 1rem; }
   .divider { margin: 0 1.5rem; }
+  .nav-links { gap: 1.2rem; }
 }
 </style>
 </head>
@@ -462,7 +541,11 @@ h1 { animation-delay: 0.25s; }
 
 <header>
   <a href="/" class="wordmark">RouxYou</a>
-  <span class="header-tag">Est. February 2026</span>
+  <div class="nav-links">
+    <a href="/" class="active">Home</a>
+    <a href="/architecture">Architecture</a>
+    <a href="https://github.com/RouxYouAI">GitHub</a>
+  </div>
 </header>
 
 <section class="hero">
@@ -486,6 +569,10 @@ h1 { animation-delay: 0.25s; }
       <span class="rule-value">Episodic</span>
       <span class="rule-label">Memory System</span>
     </div>
+    <div class="rule">
+      <span class="rule-value">Self-Improving</span>
+      <span class="rule-label">Proposal Engine</span>
+    </div>
   </div>
 </section>
 
@@ -495,9 +582,9 @@ h1 { animation-delay: 0.25s; }
   <div class="section-label">What It Is</div>
   <div class="what-content">
     <h2>The orchestration layer is too important to rent</h2>
-    <p>Every major AI agent framework sends your data to someone else's server. Your prompts, your files, your workflow — routed through third-party APIs, metered by the token, owned by the provider.</p>
-    <p>RouxYou runs the entire stack locally. A lightweight router classifies intent. A planner reasons through complex tasks. Workers execute without LLM overhead. A watchdog monitors the whole thing — and can't be modified by the system it watches.</p>
-    <p>The system learns from its own task history, improves its own code through a blue-green deployment pipeline, and rolls back automatically when something breaks. No fine-tuning. No retraining. Just episodic memory and safe self-modification.</p>
+    <p>Every major AI agent framework sends your data to someone else's server. Your prompts, your files, your workflow &mdash; routed through third-party APIs, metered by the token, owned by the provider.</p>
+    <p>RouxYou runs the entire stack locally. A lightweight router classifies intent. A reasoning engine plans complex tasks. Workers execute without LLM overhead. A watchdog monitors the whole thing &mdash; and can't be modified by the system it watches.</p>
+    <p>The system learns from its own task history, improves its own code through a blue-green deployment pipeline, and rolls back automatically when something breaks. It proposes its own improvements, searches the web for better patterns, and learns from the outcomes. No fine-tuning. No retraining. Just episodic memory, safe self-modification, and a feedback loop that compounds over time.</p>
   </div>
 </section>
 
@@ -512,25 +599,38 @@ h1 { animation-delay: 0.25s; }
       <div class="arch-desc">Reverse proxy and route table. Hot-swaps between production and staging during deploys.</div>
     </div>
     <div class="arch-cell">
-      <div class="arch-port">:8001 — Ministral-3B</div>
+      <div class="arch-port">:8001 &mdash; ~3B router</div>
       <div class="arch-name">Orchestrator</div>
-      <div class="arch-desc">Three-tier routing. Pattern match → direct dispatch → deep planning. Minimizes LLM calls.</div>
+      <div class="arch-desc">Three-tier routing + task queue. Pattern match &rarr; direct dispatch &rarr; deep planning. Minimizes LLM calls.</div>
     </div>
     <div class="arch-cell">
-      <div class="arch-port">:8002 — Qwen3-14B</div>
-      <div class="arch-name">Thinker</div>
-      <div class="arch-desc">Deep reasoning and code generation. Only invoked when the task demands it.</div>
+      <div class="arch-port">:8002 &mdash; ~14B reasoning</div>
+      <div class="arch-name">Coder</div>
+      <div class="arch-desc">Deep reasoning and code generation. Plans complex tasks. Enriches proposals. Only invoked when the task demands it.</div>
     </div>
     <div class="arch-cell">
       <div class="arch-port">:8003</div>
       <div class="arch-name">Worker</div>
-      <div class="arch-desc">15+ capabilities. Zero LLM overhead. Pure Python execution for filesystem, search, scheduling.</div>
+      <div class="arch-desc">20+ capabilities. Zero LLM overhead. Pure Python execution for filesystem, search, commands, vision, and deploy.</div>
     </div>
     <div class="arch-cell">
-      <div class="arch-port">:8010 — immutable</div>
-      <div class="arch-name">Watchtower</div>
-      <div class="arch-desc">Supervisor with human approval gate. Cannot be modified by the system. The one thing that doesn't evolve.</div>
+      <div class="arch-port">:8005</div>
+      <div class="arch-name">Scheduler</div>
+      <div class="arch-desc">Multi-source schedule aggregation. Automated web scrapers. Google Calendar sync. Conflict detection.</div>
     </div>
+    <div class="arch-cell">
+      <div class="arch-port">:8010 &mdash; immutable</div>
+      <div class="arch-name">Watchtower</div>
+      <div class="arch-desc">Supervisor with human approval gate. Blue-green deploy pipeline. Cannot be modified by the system it watches.</div>
+    </div>
+    <div class="arch-cell">
+      <div class="arch-port">:8012 &mdash; proposals</div>
+      <div class="arch-name">Cron &amp; Coach</div>
+      <div class="arch-desc">Heuristic observers. LLM Coach enrichment. Web research proposals. Memory decay. Scheduled automation.</div>
+    </div>
+  </div>
+  <div class="arch-cta">
+    <a href="/architecture">Read the full technical architecture &rarr;</a>
   </div>
 </section>
 
@@ -541,7 +641,7 @@ h1 { animation-delay: 0.25s; }
   <div class="claims-list">
     <div class="claim">
       <span class="claim-num">01</span>
-      <div class="claim-text"><strong>Fully local inference</strong> on consumer-grade hardware — no cloud APIs, no per-token costs, no data exfiltration</div>
+      <div class="claim-text"><strong>Fully local inference</strong> on consumer-grade hardware &mdash; no cloud APIs, no per-token costs, no data exfiltration</div>
     </div>
     <div class="claim">
       <span class="claim-num">02</span>
@@ -553,7 +653,11 @@ h1 { animation-delay: 0.25s; }
     </div>
     <div class="claim">
       <span class="claim-num">04</span>
-      <div class="claim-text"><strong>Episodic memory</strong> that teaches the system from its own task history — learning without fine-tuning</div>
+      <div class="claim-text"><strong>Episodic memory</strong> that teaches the system from its own task history &mdash; learning without fine-tuning</div>
+    </div>
+    <div class="claim">
+      <span class="claim-num">05</span>
+      <div class="claim-text"><strong>Self-improvement proposals</strong> &mdash; the system observes its own health, researches better patterns, and suggests changes to its operator through a three-tiered proposal pipeline</div>
     </div>
   </div>
 </section>
@@ -588,14 +692,42 @@ h1 { animation-delay: 0.25s; }
 
 <div class="divider"></div>
 
+<section class="proposals">
+  <div class="section-label">Proposal System</div>
+  <div class="proposals-content">
+    <h2>The system suggests its own improvements</h2>
+    <p>RouxYou doesn't wait to be told what's wrong. Three tiers of observation feed into a unified proposal pipeline. Every suggestion requires human approval. Every outcome is recorded in memory. The system learns from its own proposals.</p>
+    <div class="tier-grid">
+      <div class="tier-cell">
+        <div class="tier-label">Tier 1</div>
+        <div class="tier-name">Heuristic Observers</div>
+        <div class="tier-desc">Six pure-Python observers. Zero LLM overhead. Health checks, memory pressure, stale tasks, codebase drift. Runs every 30 minutes.</div>
+      </div>
+      <div class="tier-cell">
+        <div class="tier-label">Tier 2</div>
+        <div class="tier-name">LLM Coach</div>
+        <div class="tier-desc">Local ~14B model enriches findings with root cause analysis, confidence scores, and cross-references with episodic memory.</div>
+      </div>
+      <div class="tier-cell">
+        <div class="tier-label">Tier 3</div>
+        <div class="tier-name">Web Research</div>
+        <div class="tier-desc">Daily searches via self-hosted engine. Seven rotating topics. Only actionable findings above 0.6 relevance become proposals.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
 <section class="ethos">
   <blockquote>RouxYou exists because the operator believed that an AI system that manages your life should not report to someone else's server.</blockquote>
-  <span class="attr">— Architecture Manifesto, Feb 2026</span>
+  <span class="attr">&mdash; Architecture Manifesto, Feb 2026</span>
 </section>
 
 <footer>
-  <span class="footer-left">© 2026 Dr. Helix & Claude — rouxyou.com</span>
+  <span class="footer-left">&copy; 2026 Dr. Helix &amp; Claude &mdash; rouxyou.com</span>
   <div class="footer-right">
+    <a href="/architecture">Architecture</a>
     <a href="https://github.com/RouxYouAI">GitHub</a>
   </div>
 </footer>
