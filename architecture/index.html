@@ -364,58 +364,9 @@ footer {
 
 <h2>Architecture Overview</h2>
 
-<p>RouxYou is a multi-agent system with nine core services running on a local network. Each service is independent, with health endpoints and clean APIs. They communicate over HTTP and don't care whether they're on one machine or twenty.</p>
+<p>RouxYou is a multi-agent system with several independent services running on a local network. Each service has health endpoints and a clean API. They communicate over HTTP and don't care whether they're on one machine or twenty.</p>
 
-<div class="diagram"><pre>
-    ┌──────────────────────────────────────────────────────────┐
-    │                      OPERATOR                            │
-    │           Dashboard (Streamlit) / Chat / Voice           │
-    └──────────────────────┬───────────────────────────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │   Gateway   │  :8000 — Reverse proxy.
-                    │             │  Hot-swaps during deploys.
-                    └──────┬──────┘
-                           │
-                    ┌──────▼──────┐
-                    │ Orchestrator│  :8001 — Intent classification.
-                    │  (~3B LLM)  │  Three-tier routing + task queue.
-                    └──┬─────┬───┘
-                       │     │
-              Tier 1   │     │  Tier 2
-              (simple) │     │  (complex)
-                       │     │
-                 ┌─────▼┐  ┌▼────────┐
-                 │Worker│  │  Coder   │  :8002 — Deep reasoning.
-                 │:8003 │  │ (~14B)   │  Code generation.
-                 │      │  │          │  Multi-step plans.
-                 │ 20+  │  └────┬─────┘
-                 │ caps  │       │
-                 │ Zero  │◄──────┘  Plans executed by Worker
-                 │ LLM.  │
-                 └───┬───┘
-                     │
-        ┌────────────┼────────────┐
-        │            │            │
-   ┌────▼───┐  ┌────▼────┐  ┌───▼──────┐
-   │ Memory │  │Scheduler│  │ Search   │
-   │  :8004 │  │  :8005  │  │ (SearXNG)│
-   │        │  │         │  │          │
-   │Episodic│  │Multi-src│  │Self-hosted│
-   │+ RAG   │  │GCal sync│  │web search │
-   └────────┘  └─────────┘  └──────────┘
 
-    ╔═══════════════════════════════════════════════╗
-    ║              WATCHTOWER LAYER                  ║
-    ║                                               ║
-    ║  :8010 Supervisor    :8012 Cron + Proposals   ║
-    ║  Immutable.          Heuristic observers.     ║
-    ║  Deploy pipeline.    LLM Coach enrichment.    ║
-    ║  Human approval.     Web Research proposals.  ║
-    ║  Cannot be modified  Episodic memory decay.   ║
-    ║  by the system.      Scheduled automation.    ║
-    ╚═══════════════════════════════════════════════╝
-</pre></div>
 
 <h3>The Gateway</h3>
 <p>A reverse proxy and route table that serves as the single entry point for all requests. The Gateway maintains a mapping of active services, enabling hot-swapping between production and staging instances during self-modification deployments. Clients never see a blip during upgrades.</p>
@@ -435,8 +386,7 @@ footer {
 <h3>The Worker</h3>
 <p>A unified execution engine with 20+ built-in capabilities and <strong>no LLM overhead</strong>. The Worker is pure Python &mdash; deterministic, fast, and predictable. Capabilities include filesystem operations (read, write, edit, copy, move, delete, directory trees), command execution, web search via a self-hosted search engine, multi-file operations, content search with regex support, screen capture and vision analysis, code verification, and deploy pipeline integration. The Worker is the primary target of self-modification &mdash; when RouxYou improves itself, it most often extends the Worker's capabilities.</p>
 
-<h3>The Scheduler</h3>
-<p>A dedicated scheduling service that aggregates work schedules from multiple sources through automated extraction. Custom web scrapers pull data from employer scheduling systems &mdash; including browser-based scrapers using Playwright for sites requiring SSO authentication. The Scheduler detects conflicts, syncs bidirectionally with Google Calendar, and exposes a natural language interface for manual entries. A Watchtower cron job triggers automated syncs on a regular cadence.</p>
+
 
 <h3>The Watchtower Layer</h3>
 <p>Two services that together form the system's safety boundary and autonomous improvement engine:</p>
@@ -624,7 +574,7 @@ footer {
   </div>
   <div class="timeline-entry">
     <div class="timeline-date">February 19, 2026</div>
-    <div class="timeline-text">Automated scheduling system. Multi-source schedule extraction with browser-based scrapers. Google Calendar bidirectional sync. Conflict detection engine.</div>
+    <div class="timeline-text">Scheduling service added. Conflict detection and calendar integration.</div>
   </div>
   <div class="timeline-entry">
     <div class="timeline-date">February 20, 2026</div>
