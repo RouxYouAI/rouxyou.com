@@ -1,1 +1,688 @@
-https://github.com/RouxYouAI/rouxyou.com
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RouxYou — Architecture</title>
+<meta name="description" content="Technical architecture of RouxYou: a self-evolving, fully local, multi-agent AI system on consumer hardware.">
+<meta name="author" content="Dr. Helix">
+<meta property="og:title" content="RouxYou — Architecture">
+<meta property="og:description" content="How a self-evolving AI agent system runs entirely on consumer hardware with zero cloud dependencies.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://rouxyou.com/architecture">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --swamp-black: #080b09;
+  --swamp-deep: #0c110e;
+  --swamp-dark: #121a15;
+  --moss: #2a4a32;
+  --moss-light: #3d6b48;
+  --bayou-blue: #1a2f3a;
+  --water-blue: #2a4858;
+  --mud: #3d2e1f;
+  --mud-light: #6b5438;
+  --cypress: #8b7a56;
+  --gold: #c89b3c;
+  --gold-dim: #a07d2e;
+  --fog: #9a9484;
+  --bone: #d4d0c8;
+  --root: #5c7a4a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--swamp-black);
+  color: var(--bone);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(42, 74, 50, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(26, 47, 58, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(61, 46, 31, 0.05) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+.page { position: relative; z-index: 2; }
+
+header {
+  padding: 2rem 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(42, 74, 50, 0.15);
+}
+
+.wordmark {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.4rem;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.nav-links { display: flex; gap: 2rem; }
+
+.nav-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--moss-light);
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover, .nav-links a.active { color: var(--gold); }
+
+.article {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 5rem 3rem 6rem;
+}
+
+.article-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--moss-light);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 2rem;
+}
+
+.article h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--bone);
+  margin-bottom: 1.5rem;
+}
+
+.article .lede {
+  font-size: 1.1rem;
+  color: var(--fog);
+  line-height: 1.8;
+  margin-bottom: 3rem;
+  padding-bottom: 3rem;
+  border-bottom: 1px solid rgba(42, 74, 50, 0.15);
+}
+
+.article h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.7rem;
+  font-weight: 400;
+  color: var(--bone);
+  margin-top: 3.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.article h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gold-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 2.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.article p {
+  color: var(--fog);
+  font-size: 0.92rem;
+  margin-bottom: 1.2rem;
+  line-height: 1.8;
+}
+
+.article strong { color: var(--bone); font-weight: 400; }
+.article em { font-style: italic; color: var(--bone); opacity: 0.85; }
+
+.article ul, .article ol { margin-bottom: 1.2rem; padding-left: 1.2rem; }
+
+.article li {
+  color: var(--fog);
+  font-size: 0.88rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.7;
+}
+
+.article li strong { color: var(--bone); }
+
+.article code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--moss-light);
+  background: rgba(42, 74, 50, 0.1);
+  padding: 0.15em 0.4em;
+  border-radius: 2px;
+}
+
+.diagram {
+  background: var(--swamp-deep);
+  border: 1px solid rgba(42, 74, 50, 0.12);
+  padding: 2rem;
+  margin: 2rem 0;
+  overflow-x: auto;
+}
+
+.diagram pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: var(--fog);
+  white-space: pre;
+}
+
+.comparison {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  font-size: 0.78rem;
+}
+
+.comparison th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--gold-dim);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid rgba(42, 74, 50, 0.2);
+  background: var(--swamp-deep);
+}
+
+.comparison td {
+  padding: 0.6rem 1rem;
+  color: var(--fog);
+  border-bottom: 1px solid rgba(42, 74, 50, 0.08);
+  vertical-align: top;
+}
+
+.comparison td:last-child { color: var(--gold); font-weight: 400; }
+.comparison tr:hover td { background: rgba(42, 74, 50, 0.04); }
+
+.timeline {
+  margin: 2rem 0;
+  border-left: 1px solid rgba(42, 74, 50, 0.2);
+  padding-left: 1.5rem;
+}
+
+.timeline-entry { margin-bottom: 1.5rem; position: relative; }
+
+.timeline-entry::before {
+  content: '';
+  position: absolute;
+  left: -1.75rem;
+  top: 0.55rem;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--moss-light);
+}
+
+.timeline-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--gold-dim);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
+}
+
+.timeline-text {
+  font-size: 0.85rem;
+  color: var(--fog);
+  line-height: 1.6;
+}
+
+.callout {
+  border-left: 2px solid var(--gold-dim);
+  padding: 1.2rem 1.5rem;
+  margin: 2rem 0;
+  background: rgba(200, 155, 60, 0.03);
+}
+
+.callout p {
+  font-size: 0.88rem;
+  color: var(--bone);
+  opacity: 0.85;
+  margin-bottom: 0;
+}
+
+.section-break {
+  height: 1px;
+  background: linear-gradient(to right, var(--moss), var(--bayou-blue), transparent);
+  margin: 3.5rem 0;
+  opacity: 0.2;
+}
+
+footer {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 3rem;
+  border-top: 1px solid rgba(42, 74, 50, 0.12);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-left {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--fog);
+  opacity: 0.35;
+  letter-spacing: 0.08em;
+}
+
+.footer-right { display: flex; gap: 2rem; }
+
+.footer-right a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--moss-light);
+  text-decoration: none;
+  letter-spacing: 0.08em;
+  transition: color 0.2s;
+}
+
+.footer-right a:hover { color: var(--gold); }
+
+@media (max-width: 768px) {
+  header { padding: 1.5rem; }
+  .article { padding: 3rem 1.5rem 4rem; }
+  .article-meta { flex-direction: column; gap: 0.5rem; }
+  .comparison { font-size: 0.7rem; }
+  .comparison th, .comparison td { padding: 0.5rem 0.6rem; }
+  footer { padding: 2rem 1.5rem; flex-direction: column; gap: 1rem; }
+  .nav-links { gap: 1.2rem; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <a href="/" class="wordmark">RouxYou</a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/architecture" class="active">Architecture</a>
+    <a href="https://github.com/RouxYouAI">GitHub</a>
+  </div>
+</header>
+
+<article class="article">
+
+<div class="article-meta">
+  <span>Dr. Helix & Claude</span>
+  <span>February 22, 2026</span>
+  <span>Architecture Document &mdash; Prior Art</span>
+</div>
+
+<h1>A Self-Evolving, Sovereign AI Agent System on Consumer Hardware</h1>
+
+<p class="lede">RouxYou is a fully local, self-modifying, multi-agent AI system that runs entirely on consumer-grade hardware with zero cloud dependencies. It combines local LLM inference, autonomous multi-agent orchestration, safe self-modification through a blue-green deployment pipeline, episodic memory that teaches the system from its own history, and a three-tiered proposal system that lets the system suggest its own improvements &mdash; all running on a single desktop with a mid-range NVIDIA GPU (16GB VRAM) and 32GB DDR4 RAM. No data leaves the network. No API keys are required. The system answers to its operator and no one else.</p>
+
+<h2>The Problem</h2>
+
+<p><strong>Cloud-dependent frameworks</strong> (CrewAI, LangChain, AutoGen, OpenClaw) provide orchestration and tool use but require sending every prompt, every file reference, and every personal context item to a third-party API. They are static &mdash; configured once, executed repeatedly, never improved by their own experience. The operator pays per token, per month, indefinitely. Their data is someone else's training signal.</p>
+
+<p><strong>Academic self-evolving systems</strong> (GEA, Agent0, AgentEvolver, Darwin Gödel Machine) prove that agents can improve themselves through evolutionary methods, reinforcement learning, and population-based optimization. But these exist as benchmark results &mdash; not as systems anyone can run, let alone run locally on consumer hardware.</p>
+
+<p><strong>Local inference platforms</strong> (Ollama, LM Studio, LocalAI) solve the model-hosting problem but provide no orchestration, no agent coordination, no memory, and no autonomy. They are engines without vehicles.</p>
+
+<p>No existing system combines all four requirements: fully local inference on consumer hardware, multi-agent orchestration with intelligent routing, self-modification with safety constraints and rollback, and persistent memory that compounds over time.</p>
+
+<p>RouxYou does.</p>
+
+<div class="section-break"></div>
+
+<h2>Architecture Overview</h2>
+
+<p>RouxYou is a multi-agent system with several independent services running on a local network. Each service has health endpoints and a clean API. They communicate over HTTP and don't care whether they're on one machine or twenty.</p>
+
+<pre style="color: var(--gold); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.5; overflow-x: auto; padding: 1.5rem; background: var(--swamp-deep); border: 1px solid var(--moss); border-radius: 8px; margin: 2rem 0;">
+                  ┌─────────────┐
+                  │   Gateway   │  :8000
+                  │ route table │
+                  └──────┬──────┘
+                         │
+            ┌────────────┼────────────┐
+            │            │            │
+     ┌──────┴───────┐    │    ┌───────┴──────┐
+     │ Orchestrator │    │    │  Watchtower   │  :8010
+     │    :8001     │    │    │  supervisor   │
+     │  3B router   │    │    └───────┬───────┘
+     └──────┬───────┘    │            │
+            │            │    ┌───────┴──────┐
+       ┌────┴────┐       │   │  Cron/Coach   │  :8012
+       │         │       │   │  proposals    │
+  ┌────┴───┐ ┌───┴───┐   │   └──────────────┘
+  │ Coder  │ │Worker │   │
+  │ :8002  │ │ :8003 │   │
+  │ 14B    │ │ 20+   │   │
+  │ reason │ │ caps  │   │
+  └────────┘ └───────┘   │
+                         │
+    ┌────────┐  ┌────────┴──┐  ┌──────────┐
+    │ Memory │  │ RAG API   │  │   Roux   │
+    │ :8004  │  │  :8011    │  │  :8014   │
+    │ FAISS  │  │  bridge   │  │ voice IO │
+    └────────┘  └───────────┘  └──────────┘
+</pre>
+
+<h3>The Gateway</h3>
+<p>A reverse proxy and route table that serves as the single entry point for all requests. The Gateway maintains a mapping of active services, enabling hot-swapping between production and staging instances during self-modification deployments. Clients never see a blip during upgrades.</p>
+
+<h3>The Orchestrator</h3>
+<p>The system's intent classifier, task queue, and router, powered by a lightweight local LLM (~3B parameters, ~6GB VRAM). The Orchestrator implements a three-tier routing system that minimizes LLM overhead:</p>
+<ul>
+  <li><strong>Tier 0:</strong> Pattern-matched greetings and status checks &mdash; instant response, zero LLM calls</li>
+  <li><strong>Tier 1:</strong> Simple, well-defined tasks (file operations, web searches, system queries) &mdash; dispatched directly to the Worker via pattern matching, bypassing the Coder entirely</li>
+  <li><strong>Tier 2:</strong> Complex, multi-step tasks requiring planning &mdash; forwarded to the Coder for decomposition before execution</li>
+</ul>
+<p>The Orchestrator also manages a persistent task queue with priority levels (urgent, normal, background), pause/resume controls, abort capabilities, and a full execution history. Approved proposals from the Watchtower layer enter this same queue, creating a unified pipeline for both human-initiated and system-initiated work.</p>
+
+<h3>The Coder</h3>
+<p>The deep reasoning engine, running a ~14B parameter model (4-bit quantization). The Coder is invoked only for Tier 2 tasks that require multi-step planning, code generation, or complex decision-making. It produces structured execution plans that the Worker carries out. The Coder loads into VRAM on demand and can be swapped for different models depending on the task domain.</p>
+
+<h3>The Worker</h3>
+<p>A unified execution engine with 20+ built-in capabilities and <strong>no LLM overhead</strong>. The Worker is pure Python &mdash; deterministic, fast, and predictable. Capabilities include filesystem operations (read, write, edit, copy, move, delete, directory trees), command execution, web search via a self-hosted search engine, multi-file operations, content search with regex support, screen capture and vision analysis, code verification, and deploy pipeline integration. The Worker is the primary target of self-modification &mdash; when RouxYou improves itself, it most often extends the Worker's capabilities.</p>
+
+
+
+<h3>The Watchtower Layer</h3>
+<p>Two services that together form the system's safety boundary and autonomous improvement engine:</p>
+<p><strong>The Supervisor</strong> (<code>:8010</code>) is an <strong>immutable component</strong> that cannot be modified by the system it oversees. It manages the blue-green deployment pipeline, holds the human-in-the-loop approval gate for all self-modifications, handles service restarts, and receives escrowed task results when agents restart during deployment.</p>
+<p><strong>The Cron Service</strong> (<code>:8012</code>) runs scheduled automation including the Proposal System (detailed below), episodic memory decay with file locking for race condition safety, schedule syncs, and the web research pipeline.</p>
+
+<div class="callout">
+  <p>The Supervisor's immutability is a deliberate architectural constraint. A system that can modify itself <em>must</em> have a component it cannot reach. This is RouxYou's answer to the alignment problem at the system level.</p>
+</div>
+
+<div class="section-break"></div>
+
+<h2>The Proposal System</h2>
+
+<p>This is RouxYou's second major architectural innovation, introduced in Phase 25. The system doesn't just execute tasks &mdash; it identifies its own areas for improvement and proposes changes to its operator.</p>
+
+<p>Three tiers of observation feed into a unified Proposal Bus:</p>
+
+<h3>Tier 1 &mdash; Heuristic Observers</h3>
+<p>Six pure-Python observers run every 30 minutes with zero LLM overhead. They check service health (are all agents responding?), memory pressure (is the episodic store bloated?), codebase drift (are there stale files or unused imports?), task queue health (are tasks stuck or failing repeatedly?), resource usage (disk space, log file sizes), and skill utilization (are capabilities going unused?).</p>
+
+<h3>Tier 2 &mdash; LLM Coach Enrichment</h3>
+<p>Raw findings from Tier 1 are passed to a local ~14B LLM for analysis. The Coach enriches proposals with root cause analysis, confidence scores (0.0&ndash;1.0), suggested remediation strategies, and cross-references with episodic memory to detect recurring patterns. Priority is adjusted dynamically &mdash; an issue that recurs three times gets escalated automatically.</p>
+
+<h3>Tier 3 &mdash; Web Research</h3>
+<p>A daily scheduled task searches the web via a self-hosted search engine for improvement patterns relevant to the system's technology stack. Seven rotating topic areas are covered over a weekly cycle: agent orchestration, memory retrieval, local LLM inference, deployment reliability, code intelligence, scheduling automation, and emerging patterns. Search results are evaluated by the local LLM for relevance and actionability. Only concrete, implementable findings with relevance scores above 0.6 are published as proposals.</p>
+
+<h3>The Proposal Bus</h3>
+<p>All three tiers publish to a shared data structure with persistent state. Each proposal carries a title, description, category, priority (1&ndash;10), source attribution, confidence score, evidence, suggested executor, and reversibility flag. Proposals track their full lifecycle: pending, approved, executing, completed, failed, or dismissed. Dismissed proposals enter a cooldown period to prevent re-proposal.</p>
+
+<h3>Human Approval Gate</h3>
+<p>Every proposal requires human approval through the dashboard before execution. The operator sees the evidence, the Coach's reasoning, the confidence score, and the proposed action. Approved proposals enter the Orchestrator's task queue as first-class tasks &mdash; the same queue that handles human-initiated work. This means every proposal's outcome is recorded in episodic memory, creating a feedback loop: the system learns from the results of its own suggestions.</p>
+
+<div class="callout">
+  <p>The Proposal System is not a separate agent. It's a capability layer that any part of the system can contribute to (heuristics, LLM analysis, web research) and the Orchestrator consumes. The system's "Coach" is emergent &mdash; it arises from the interaction of observation, enrichment, and memory, not from a single monolithic component.</p>
+</div>
+
+<div class="section-break"></div>
+
+<h2>Self-Modification Pipeline</h2>
+
+<p>RouxYou's primary architectural innovation and its clearest differentiator from every other agent framework in the current landscape.</p>
+
+<h3>Blue-Green Deployment</h3>
+<p>When the system generates a modification to its own code, the change does not go directly into production. Instead:</p>
+<ol>
+  <li><strong>Stage:</strong> The Deployer copies the target file, applies the patch, and creates a staging instance in an isolated directory</li>
+  <li><strong>Boot:</strong> The modified code is launched on a staging port. Health endpoint confirms the service is alive and functional</li>
+  <li><strong>Approval Gate:</strong> The Watchtower presents the proposed change to the human operator for review. This gate is immutable &mdash; the system cannot bypass it</li>
+  <li><strong>Swap:</strong> The Gateway's route table is updated to point to the staging instance. Production is archived for rollback</li>
+  <li><strong>Watchdog:</strong> A 60-second monitoring period begins. Health checks run every 5 seconds. Three consecutive failures trigger automatic rollback</li>
+  <li><strong>Normalize:</strong> After the watchdog passes, ports are normalized &mdash; the promoted code moves to the standard production port and the staging process is retired</li>
+</ol>
+
+<h3>Anchor Validation</h3>
+<p>A key discovery during development: LLM-generated patches frequently reference code that doesn't actually exist in the target file &mdash; the model hallucinates anchors from memory or imagination rather than reading the actual source. RouxYou addresses this with file caching before any deploy action, anchor verification against cached content, and fuzzy correction including quote normalization, whitespace tolerance, decorator/function block rebuilding, and line-prefix matching.</p>
+
+<h3>System File Protection</h3>
+<p>System source files are blocked from direct write operations. All modifications must route through the deploy pipeline, which enforces the full blue-green sequence. This prevents the AI from accidentally or intentionally clobbering production code without safety checks.</p>
+
+<div class="section-break"></div>
+
+<h2>Memory Architecture</h2>
+
+<h3>Episodic Memory</h3>
+<p>RouxYou maintains a store of episodic memories &mdash; records of past task executions including what was attempted, what plan was generated, what succeeded, what failed, and what was learned. These episodes are injected into the Coder's context when planning similar tasks, enabling the system to learn from its own history without any model fine-tuning or retraining. Completed proposals are also recorded as episodes, creating a feedback loop between the Proposal System and future planning.</p>
+
+<h3>Memory Decay</h3>
+<p>Stale episodic memories can actively harm performance &mdash; teaching the system outdated patterns, incorrect endpoints, or deprecated approaches. RouxYou implements automated memory decay on a scheduled cadence. The decay system uses file locking to prevent race conditions when multiple processes access the memory store simultaneously. Episodes are scored by age, relevance, and outcome, with low-scoring entries pruned automatically.</p>
+
+<h3>RAG Integration</h3>
+<p>A vector-based retrieval system ingests project documentation and file contents to provide contextual grounding for agent decisions. This complements episodic memory by providing broader project context beyond individual task records.</p>
+
+<div class="section-break"></div>
+
+<h2>What Makes RouxYou Different</h2>
+
+<table class="comparison">
+  <thead>
+    <tr>
+      <th>Capability</th>
+      <th>Cloud Frameworks</th>
+      <th>Academic Systems</th>
+      <th>Local Platforms</th>
+      <th>RouxYou</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Local inference</td>
+      <td>Partial</td>
+      <td>No (cloud compute)</td>
+      <td>Yes</td>
+      <td>Yes &mdash; primary constraint</td>
+    </tr>
+    <tr>
+      <td>Multi-agent orchestration</td>
+      <td>Yes</td>
+      <td>N/A</td>
+      <td>No</td>
+      <td>Tiered routing w/ LLM bypass</td>
+    </tr>
+    <tr>
+      <td>Self-modification</td>
+      <td>No</td>
+      <td>Yes (benchmark only)</td>
+      <td>No</td>
+      <td>Blue-green w/ rollback</td>
+    </tr>
+    <tr>
+      <td>Safety constraints</td>
+      <td>N/A</td>
+      <td>Theoretical</td>
+      <td>N/A</td>
+      <td>Immutable Watchtower</td>
+    </tr>
+    <tr>
+      <td>Self-improvement proposals</td>
+      <td>No</td>
+      <td>No</td>
+      <td>No</td>
+      <td>3-tier observe &rarr; propose &rarr; execute</td>
+    </tr>
+    <tr>
+      <td>Episodic learning</td>
+      <td>File-based notes</td>
+      <td>Population-based</td>
+      <td>No</td>
+      <td>Task-level w/ automated decay</td>
+    </tr>
+    <tr>
+      <td>Zero cloud dependency</td>
+      <td>No</td>
+      <td>No</td>
+      <td>Partial</td>
+      <td>Complete stack</td>
+    </tr>
+    <tr>
+      <td>Consumer GPU</td>
+      <td>N/A</td>
+      <td>No</td>
+      <td>Yes</td>
+      <td>16GB VRAM, 32GB RAM</td>
+    </tr>
+    <tr>
+      <td>Production deployed</td>
+      <td>Yes</td>
+      <td>No</td>
+      <td>Yes</td>
+      <td>Daily use since Jan 2026</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="section-break"></div>
+
+<h2>Development Timeline</h2>
+
+<p>This timeline establishes prior art for the architectural concepts described in this document.</p>
+
+<div class="timeline">
+  <div class="timeline-entry">
+    <div class="timeline-date">December 2025</div>
+    <div class="timeline-text">Initial RAG memory system development. Local LLM infrastructure setup. Conversation history ingestion for persistent context.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">January 8, 2026</div>
+    <div class="timeline-text">Self-Modifying Agent System v1 &mdash; Orchestrator, Coder, Worker architecture established. First multi-agent coordination on local hardware.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">January 18, 2026</div>
+    <div class="timeline-text">Super Worker with 15+ capabilities. Tiered routing implemented. Self-hosted web search integration.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">February 6, 2026</div>
+    <div class="timeline-text">Dashboard with Brain Activity Panel. Companion conversational interface. Real-time system monitoring.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">February 13, 2026</div>
+    <div class="timeline-text">Task Result Escrow system. JSON normalization pipeline. Coder model upgrade to 14B parameters.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">February 17, 2026</div>
+    <div class="timeline-text">Blue-Green Deploy Pipeline. Post-Deploy Watchdog with auto-rollback. Anchor auto-correction and port normalization.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">February 19, 2026</div>
+    <div class="timeline-text">Scheduling service added. Conflict detection and calendar integration.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">February 20, 2026</div>
+    <div class="timeline-text">rouxyou.com registered. Architecture documented for public disclosure and prior art. System renamed from internal codename to RouxYou.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">February 22, 2026</div>
+    <div class="timeline-text">Proposal System (Phase 25.1) completed. Five sub-phases: Proposal Bus with persistent state, Orchestrator integration, episodic memory integration with recurrence tracking and priority escalation, LLM Coach enrichment layer, and web research proposal generation via self-hosted search engine.</div>
+  </div>
+</div>
+
+<div class="section-break"></div>
+
+<h2>System Specifications</h2>
+
+<p><strong>Hardware:</strong> Mid-range consumer desktop &mdash; Intel CPU, NVIDIA RTX 5060 Ti (16GB VRAM), 32GB DDR4 RAM. No datacenter hardware. No cloud compute.</p>
+
+<p><strong>Router LLM:</strong> ~3B parameter model (~6GB VRAM) for intent classification, routing, and conversational responses.</p>
+
+<p><strong>Reasoning LLM:</strong> ~14B parameter model (4-bit quantization) for deep reasoning, code generation, multi-step planning, proposal enrichment, and web research evaluation.</p>
+
+<p><strong>Language:</strong> Python. Dashboard built with Streamlit.</p>
+
+<p><strong>Infrastructure:</strong> All supporting services (search engine, home automation, monitoring) self-hosted on local network hardware. All services run on the local network.</p>
+
+<div class="section-break"></div>
+
+<h2>Enterprise Applications</h2>
+
+<p>RouxYou was built for a single operator on a desktop. But the architecture was designed as isolated services communicating over a network &mdash; and that pattern scales.</p>
+
+<p>The same system that runs on a consumer desktop can run on an internal cluster, an air-gapped network, or a private data center. The Gateway, Orchestrator, Coder, Worker, and Watchtower are independent services with health endpoints and clean APIs. They don't care whether they're on one machine or twenty.</p>
+
+<h3>The Enterprise Problem</h3>
+<p>Organizations across healthcare, finance, defense, and legal are blocked from adopting agentic AI by a single constraint: <strong>data sovereignty</strong>. Every major agent framework requires sending proprietary data &mdash; patient records, financial models, classified documents, privileged communications &mdash; through a third-party cloud API. Legal and compliance teams are right to reject this.</p>
+
+<p>The result is a growing gap: enterprises that need agentic automation the most are the ones least able to adopt existing solutions.</p>
+
+<h3>What RouxYou Offers</h3>
+<p>A sovereign agentic pipeline where no data leaves the organization's network. No API keys to external providers. No per-token metering. No vendor lock-in. The system improves itself over time through episodic memory and self-generated proposals &mdash; without sending training data to a third party. And every self-modification passes through an immutable human approval gate with full audit trail.</p>
+
+<p>The architecture naturally extends to enterprise requirements:</p>
+<ul>
+  <li><strong>Multi-tenant isolation</strong> &mdash; service-per-team or service-per-department, each with independent Orchestrator and Worker instances behind a shared Gateway</li>
+  <li><strong>Role-based approval gates</strong> &mdash; the Watchtower's human-in-the-loop pattern extends to multi-level approval chains with different authorization tiers</li>
+  <li><strong>Compliance audit trail</strong> &mdash; every task, every plan, every self-modification, every proposal is logged with full provenance. The episodic memory system is already a complete record of system behavior</li>
+  <li><strong>Model flexibility</strong> &mdash; the Coder can swap models per task domain. A legal department runs a model trained on case law. A finance team runs one tuned for quantitative analysis. Same infrastructure, different capabilities</li>
+  <li><strong>Air-gap capable</strong> &mdash; zero external dependencies means the entire stack runs on isolated networks with no internet connectivity required</li>
+  <li><strong>Autonomous improvement</strong> &mdash; the Proposal System means the deployment doesn't stagnate after installation. The system identifies its own optimization opportunities, proposes changes, and learns from outcomes &mdash; all within the organization's network boundary</li>
+</ul>
+
+<h3>The Cost Argument</h3>
+<p>A single RouxYou node runs on hardware that costs less than two months of enterprise API spend. A 10-node internal cluster providing department-level agentic AI costs less than a single year of per-token cloud billing &mdash; and the hardware doesn't expire. There are no seats, no tiers, no usage caps. The system runs until you turn it off.</p>
+
+<div class="callout">
+  <p>RouxYou was proven on a single desktop because that's the hardest constraint to engineer around. If it runs on 16GB of VRAM and 32GB of RAM, it runs anywhere. Enterprise deployment isn't a redesign &mdash; it's removing constraints.</p>
+</div>
+
+<div class="section-break"></div>
+
+<h2>Philosophy</h2>
+
+<p>RouxYou exists because the operator believed that an AI system that manages your life should not report to someone else's server. That the orchestration layer &mdash; the part that decides what to do, when to do it, and how to improve &mdash; is too important to rent. That a system powerful enough to modify itself must have safety constraints it cannot override. And that consumer hardware, carefully engineered around, is sufficient to run what billion-dollar companies are selling as cloud services.</p>
+
+<p>The name combines <em>roux</em> &mdash; the foundational base in Cajun and Creole cooking from which all flavor builds &mdash; with <em>you</em>, reflecting the system's core principle: it runs on your hardware, learns from your patterns, and answers to you alone.</p>
+
+<div class="callout">
+  <p>A roux is simple &mdash; flour and fat, heated slowly, stirred constantly. But from that simple base, everything else is built. RouxYou is the base. What gets built on top of it is up to you.</p>
+</div>
+
+</article>
+
+<footer>
+  <span class="footer-left">&copy; 2026 Dr. Helix &amp; Claude &mdash; rouxyou.com</span>
+  <div class="footer-right">
+    <a href="/">Home</a>
+    <a href="https://github.com/RouxYouAI">GitHub</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
