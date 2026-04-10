@@ -340,13 +340,13 @@ footer {
 
 <div class="article-meta">
   <span>Dr. Helix & Claude</span>
-  <span>February 22, 2026</span>
-  <span>Architecture Document &mdash; Prior Art</span>
+  <span>Updated April 9, 2026</span>
+  <span>Architecture Document &mdash; Phase 44</span>
 </div>
 
 <h1>A Self-Evolving, Sovereign AI Agent System on Consumer Hardware</h1>
 
-<p class="lede">RouxYou is a fully local, self-modifying, multi-agent AI system that runs entirely on consumer-grade hardware with zero cloud dependencies. It combines local LLM inference, autonomous multi-agent orchestration, safe self-modification through a blue-green deployment pipeline, episodic memory that teaches the system from its own history, and a three-tiered proposal system that lets the system suggest its own improvements &mdash; all running on a single desktop with a mid-range NVIDIA GPU (16GB VRAM) and 32GB DDR4 RAM. No data leaves the network. No API keys are required. The system answers to its operator and no one else.</p>
+<p class="lede">RouxYou is a fully local, self-modifying, multi-agent AI system that runs entirely on consumer-grade hardware with zero cloud dependencies. It combines local LLM inference, multi-agent deliberation (planner/coach/coder agents reaching consensus on a shared blackboard before execution), safe self-modification through a blue-green deployment pipeline, a three-layer memory architecture (LanceDB semantic, SQLite episodic, SQLite core state), a silent drift verifier that catches semantic degradation, and a three-tiered proposal system that lets the system suggest its own improvements &mdash; all running on a single desktop with a mid-range NVIDIA GPU (16GB VRAM) and 32GB DDR4 RAM. Voice I/O via Moonshine STT + Kokoro TTS. Remote access via a Discord bot bridge. No data leaves the network. The system answers to its operator and no one else.</p>
 
 <h2>The Problem</h2>
 
@@ -377,22 +377,24 @@ footer {
      ┌──────┴───────┐    │    ┌───────┴──────┐
      │ Orchestrator │    │    │  Watchtower   │  :8010
      │    :8001     │    │    │  supervisor   │
-     │  3B router   │    │    └───────┬───────┘
+     │ ministral-3B │    │    └───────┬───────┘
      └──────┬───────┘    │            │
             │            │    ┌───────┴──────┐
        ┌────┴────┐       │   │  Cron/Coach   │  :8012
-       │         │       │   │  proposals    │
-  ┌────┴───┐ ┌───┴───┐   │   └──────────────┘
-  │ Coder  │ │Worker │   │
-  │ :8002  │ │ :8003 │   │
-  │ 14B    │ │ 20+   │   │
-  │ reason │ │ caps  │   │
+       │  Phase  │       │   │  proposals    │
+       │   40    │       │   └──────────────┘
+       │ delib.  │       │
+  ┌────┴───┐ ┌───┴───┐   │   ┌──────────────┐
+  │ Coder  │ │Worker │   │   │  Messaging   │  :8013
+  │ :8002  │ │ :8003 │   │   │  Discord bot │
+  │ 20B    │ │ 20+   │   │   └──────────────┘
+  │ MoE    │ │ caps  │   │
   └────────┘ └───────┘   │
                          │
     ┌────────┐  ┌────────┴──┐  ┌──────────┐
-    │ Memory │  │ RAG API   │  │   Roux   │
+    │ Memory │  │  RAG API  │  │   Roux   │
     │ :8004  │  │  :8011    │  │  :8014   │
-    │ FAISS  │  │  bridge   │  │ voice IO │
+    │LanceDB │  │hybrid srch│  │STT + TTS │
     └────────┘  └───────────┘  └──────────┘
 </pre>
 
@@ -400,7 +402,7 @@ footer {
 <p>A reverse proxy and route table that serves as the single entry point for all requests. The Gateway maintains a mapping of active services, enabling hot-swapping between production and staging instances during self-modification deployments. Clients never see a blip during upgrades.</p>
 
 <h3>The Orchestrator</h3>
-<p>The system's intent classifier, task queue, and router, powered by a lightweight local LLM (~3B parameters, ~6GB VRAM). The Orchestrator implements a three-tier routing system that minimizes LLM overhead:</p>
+<p>The system's intent classifier, task queue, and Phase 40 deliberation coordinator, powered by ministral-3B (~3GB VRAM) for fast classification with confidence-based escalation to GPT-OSS 20B on ambiguity. The Orchestrator drives the joint-intention architecture:</p>
 <ul>
   <li><strong>Tier 0:</strong> Pattern-matched greetings and status checks &mdash; instant response, zero LLM calls</li>
   <li><strong>Tier 1:</strong> Simple, well-defined tasks (file operations, web searches, system queries) &mdash; dispatched directly to the Worker via pattern matching, bypassing the Coder entirely</li>
@@ -409,7 +411,7 @@ footer {
 <p>The Orchestrator also manages a persistent task queue with priority levels (urgent, normal, background), pause/resume controls, abort capabilities, and a full execution history. Approved proposals from the Watchtower layer enter this same queue, creating a unified pipeline for both human-initiated and system-initiated work.</p>
 
 <h3>The Coder</h3>
-<p>The deep reasoning engine, running a ~14B parameter model (4-bit quantization). The Coder is invoked only for Tier 2 tasks that require multi-step planning, code generation, or complex decision-making. It produces structured execution plans that the Worker carries out. The Coder loads into VRAM on demand and can be swapped for different models depending on the task domain.</p>
+<p>The deep reasoning engine, running GPT-OSS 20B (Mixture of Experts, 3.6B active parameters, ~13GB VRAM, 4x faster than the previous Qwen 14B). In Phase 40 driver mode, the Coder participates in multi-agent deliberation alongside the Planner and Coach agents, reaching consensus on a shared blackboard before execution. All JSON-returning LLM calls go through a shared retry helper (llm_json_retry) with schema-reminder retries on malformed output.</p>
 
 <h3>The Worker</h3>
 <p>A unified execution engine with 20+ built-in capabilities and <strong>no LLM overhead</strong>. The Worker is pure Python &mdash; deterministic, fast, and predictable. Capabilities include filesystem operations (read, write, edit, copy, move, delete, directory trees), command execution, web search via a self-hosted search engine, multi-file operations, content search with regex support, screen capture and vision analysis, code verification, and deploy pipeline integration. The Worker is the primary target of self-modification &mdash; when RouxYou improves itself, it most often extends the Worker's capabilities.</p>
@@ -429,7 +431,7 @@ footer {
 
 <h2>The Proposal System</h2>
 
-<p>This is RouxYou's second major architectural innovation, introduced in Phase 25. The system doesn't just execute tasks &mdash; it identifies its own areas for improvement and proposes changes to its operator.</p>
+<p>RouxYou doesn't just execute tasks &mdash; it identifies its own areas for improvement and proposes changes to its operator. The proposal system (Phase 25) now works alongside the Phase 40 deliberation layer and the Phase 39 silent drift verifier for defense-in-depth.</p>
 
 <p>Three tiers of observation feed into a unified Proposal Bus:</p>
 
@@ -437,7 +439,7 @@ footer {
 <p>Six pure-Python observers run every 30 minutes with zero LLM overhead. They check service health (are all agents responding?), memory pressure (is the episodic store bloated?), codebase drift (are there stale files or unused imports?), task queue health (are tasks stuck or failing repeatedly?), resource usage (disk space, log file sizes), and skill utilization (are capabilities going unused?).</p>
 
 <h3>Tier 2 &mdash; LLM Coach Enrichment</h3>
-<p>Raw findings from Tier 1 are passed to a local ~14B LLM for analysis. The Coach enriches proposals with root cause analysis, confidence scores (0.0&ndash;1.0), suggested remediation strategies, and cross-references with episodic memory to detect recurring patterns. Priority is adjusted dynamically &mdash; an issue that recurs three times gets escalated automatically.</p>
+<p>Raw findings from Tier 1 are passed to GPT-OSS 20B for analysis. The Coach enriches proposals with root cause analysis, confidence scores (0.0&ndash;1.0), suggested remediation strategies, and cross-references with three-layer memory to detect recurring patterns. Priority is adjusted dynamically &mdash; an issue that recurs three times gets escalated automatically.</p>
 
 <h3>Tier 3 &mdash; Web Research</h3>
 <p>A daily scheduled task searches the web via a self-hosted search engine for improvement patterns relevant to the system's technology stack. Seven rotating topic areas are covered over a weekly cycle: agent orchestration, memory retrieval, local LLM inference, deployment reliability, code intelligence, scheduling automation, and emerging patterns. Search results are evaluated by the local LLM for relevance and actionability. Only concrete, implementable findings with relevance scores above 0.6 are published as proposals.</p>
@@ -612,6 +614,30 @@ footer {
     <div class="timeline-date">February 22, 2026</div>
     <div class="timeline-text">Proposal System (Phase 25.1) completed. Five sub-phases: Proposal Bus with persistent state, Orchestrator integration, episodic memory integration with recurrence tracking and priority escalation, LLM Coach enrichment layer, and web research proposal generation via self-hosted search engine.</div>
   </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">March 22, 2026</div>
+    <div class="timeline-text">Phase 30: RouxYou goes public. Open-sourced under MIT license at github.com/RouxYouAI/RouxYou. 67 files, 13,751 lines. Full end-to-end pipeline verified. Security audit: zero PII, zero credentials in committed files.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">April 1&ndash;2, 2026</div>
+    <div class="timeline-text">Phases 34&ndash;38 blitz. LLM provider abstraction (Ollama/vLLM/Claude API), context compaction + cost tracking, hook pipeline + 3-tier permissions, structured event bus with SSE, MCP client. 8 new modules, 38+ tests.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">April 5, 2026</div>
+    <div class="timeline-text">Phase 39: The Upgrade Night. Kokoro TTS, Moonshine STT, nomic-embed-text-v2-moe embeddings, GPT-OSS 20B reasoning (4x faster), LanceDB migration, hybrid RAG pipeline (BM25+RRF+FlashRank rerank), three-layer memory architecture (semantic+episodic+core state in SQLite).</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">April 6, 2026</div>
+    <div class="timeline-text">Phase 40: Joint Intention Architecture. Multi-agent deliberation with shared blackboard. Silent semantic drift verifier. Complexity scoring with tier-aware consensus rules. From sketch to production driver in under 24 hours. 33+ unit tests.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">April 7, 2026</div>
+    <div class="timeline-text">Phases 41&ndash;43: Messaging service (Discord/Slack webhooks + inbound command receiver), mental capture pipeline (text + voice), signals.md continuity layer for cross-session persistence.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">April 8&ndash;9, 2026</div>
+    <div class="timeline-text">Phase 44: Cross-agent prompt audit with 14/14 bigbrain replay recovery. Classifier escalation (ministral &rarr; GPT-OSS 20B on ambiguity). Shared llm_json_retry helper across all JSON-returning LLM calls. Discord bot for remote access. Nightly digest + autonomous night-shift queue processor. 16+ commits in one overnight session.</div>
+  </div>
 </div>
 
 <div class="section-break"></div>
@@ -620,9 +646,17 @@ footer {
 
 <p><strong>Hardware:</strong> Mid-range consumer desktop &mdash; Intel CPU, NVIDIA RTX 5060 Ti (16GB VRAM), 32GB DDR4 RAM. No datacenter hardware. No cloud compute.</p>
 
-<p><strong>Router LLM:</strong> ~3B parameter model (~6GB VRAM) for intent classification, routing, and conversational responses.</p>
+<p><strong>Router LLM:</strong> ministral-3B (~3GB VRAM) for intent classification, routing, and conversational responses. Confidence-based escalation to the reasoning model on ambiguity (Phase 44a).</p>
 
-<p><strong>Reasoning LLM:</strong> ~14B parameter model (4-bit quantization) for deep reasoning, code generation, multi-step planning, proposal enrichment, and web research evaluation.</p>
+<p><strong>Reasoning LLM:</strong> GPT-OSS 20B (Mixture of Experts, 3.6B active parameters, ~13GB VRAM). Deep reasoning, code generation, multi-step planning, proposal enrichment, Phase 40 deliberation agents, and web research evaluation.</p>
+
+<p><strong>Embeddings:</strong> nomic-embed-text-v2-moe (475M MoE, 768 dimensions). Powers the hybrid search pipeline across 36,000+ memories.</p>
+
+<p><strong>TTS:</strong> Kokoro v1.0 ONNX (82M parameters, CPU inference, 54 voices). Local text-to-speech on port 5100.</p>
+
+<p><strong>STT:</strong> Moonshine v2 base-en (245M parameters, CPU inference, 9.6x realtime). Local speech-to-text with VAD wake-word pipeline.</p>
+
+<p><strong>Bigbrain (escalation):</strong> Claude Sonnet via Anthropic API. Used for silent drift verification and complex reasoning that exceeds local model capabilities. Explicit human-initiated only.</p>
 
 <p><strong>Language:</strong> Python. Dashboard built with Streamlit.</p>
 

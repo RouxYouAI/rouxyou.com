@@ -566,12 +566,12 @@ h1 { animation-delay: 0.25s; }
       <span class="rule-label">With Rollback</span>
     </div>
     <div class="rule">
-      <span class="rule-value">Episodic</span>
+      <span class="rule-value">Hybrid 3-Layer</span>
       <span class="rule-label">Memory System</span>
     </div>
     <div class="rule">
-      <span class="rule-value">Self-Improving</span>
-      <span class="rule-label">Proposal Engine</span>
+      <span class="rule-value">Joint Intention</span>
+      <span class="rule-label">Deliberation (Phase 40)</span>
     </div>
   </div>
 </section>
@@ -584,7 +584,7 @@ h1 { animation-delay: 0.25s; }
     <h2>The orchestration layer is too important to rent</h2>
     <p>Every major AI agent framework sends your data to someone else's server. Your prompts, your files, your workflow &mdash; routed through third-party APIs, metered by the token, owned by the provider.</p>
     <p>RouxYou runs the entire stack locally. A lightweight router classifies intent. A reasoning engine plans complex tasks. Workers execute without LLM overhead. A watchdog monitors the whole thing &mdash; and can't be modified by the system it watches.</p>
-    <p>The system learns from its own task history, improves its own code through a blue-green deployment pipeline, and rolls back automatically when something breaks. It proposes its own improvements, searches the web for better patterns, and learns from the outcomes. No fine-tuning. No retraining. Just episodic memory, safe self-modification, and a feedback loop that compounds over time.</p>
+    <p>The system learns from its own task history through a three-layer memory architecture (semantic, episodic, core state), improves its own code through a blue-green deployment pipeline, and rolls back automatically when something breaks. Multi-agent deliberation (Phase 40) reaches consensus on a shared blackboard before execution. A silent drift verifier catches when retry loops satisfy surface constraints but drop semantic intent. It proposes its own improvements, searches the web for better patterns, and learns from the outcomes. No fine-tuning. No retraining. Just hybrid memory, safe self-modification, and a feedback loop that compounds.</p>
   </div>
 </section>
 
@@ -599,19 +599,24 @@ h1 { animation-delay: 0.25s; }
       <div class="arch-desc">Reverse proxy and route table. Hot-swaps between production and staging during deploys.</div>
     </div>
     <div class="arch-cell">
-      <div class="arch-port">:8001 &mdash; ~3B router</div>
+      <div class="arch-port">:8001 &mdash; ministral-3B router</div>
       <div class="arch-name">Orchestrator</div>
-      <div class="arch-desc">Three-tier routing + task queue. Pattern match &rarr; direct dispatch &rarr; deep planning. Minimizes LLM calls.</div>
+      <div class="arch-desc">Intent classification + Phase 40 joint-intention deliberation. Planner/Coach/Coder agents reach consensus on a shared blackboard before execution.</div>
     </div>
     <div class="arch-cell">
-      <div class="arch-port">:8002 &mdash; ~14B reasoning</div>
+      <div class="arch-port">:8002 &mdash; GPT-OSS 20B (MoE)</div>
       <div class="arch-name">Coder</div>
-      <div class="arch-desc">Deep reasoning and code generation. Plans complex tasks. Enriches proposals. Only invoked when the task demands it.</div>
+      <div class="arch-desc">Deep reasoning and code generation via gpt-oss:20b (3.6B active params, MoE). Plans complex tasks. Enriches proposals. Drives the Phase 40 deliberation pipeline.</div>
     </div>
     <div class="arch-cell">
       <div class="arch-port">:8003</div>
       <div class="arch-name">Worker</div>
       <div class="arch-desc">20+ capabilities. Zero LLM overhead. Pure Python execution for filesystem, search, commands, vision, and deploy.</div>
+    </div>
+    <div class="arch-cell">
+      <div class="arch-port">:8004 + :8011</div>
+      <div class="arch-name">Memory &amp; RAG</div>
+      <div class="arch-desc">Three-layer memory: LanceDB semantic (hybrid BM25+RRF+FlashRank rerank), SQLite episodic, SQLite core state. Embeddings via nomic-embed-text-v2-moe.</div>
     </div>
     <div class="arch-cell">
       <div class="arch-port">:8010 &mdash; immutable</div>
@@ -622,6 +627,21 @@ h1 { animation-delay: 0.25s; }
       <div class="arch-port">:8012 &mdash; proposals</div>
       <div class="arch-name">Cron &amp; Coach</div>
       <div class="arch-desc">Heuristic observers. LLM Coach enrichment. Web research proposals. Memory decay. Scheduled automation.</div>
+    </div>
+    <div class="arch-cell">
+      <div class="arch-port">:8013 + Discord</div>
+      <div class="arch-name">Messaging</div>
+      <div class="arch-desc">Outbound webhooks (Discord/Slack). Inbound command bridge via Discord bot. Approve proposals, check status, submit tasks from your phone.</div>
+    </div>
+    <div class="arch-cell">
+      <div class="arch-port">:8014 + :5100</div>
+      <div class="arch-name">Roux Voice</div>
+      <div class="arch-desc">Moonshine v2 STT (245M, CPU, 9.6x realtime) + Kokoro v1.0 TTS (82M, CPU, 54 voices). VAD wake-word pipeline. Local voice I/O with zero cloud.</div>
+    </div>
+    <div class="arch-cell">
+      <div class="arch-port">:8039 &mdash; verifier</div>
+      <div class="arch-name">Silent Drift Verifier</div>
+      <div class="arch-desc">Catches when self-healing retry loops satisfy surface constraints but silently drop semantic intent. Claude Sonnet as the verifier-of-last-resort.</div>
     </div>
   </div>
   <div class="arch-cta">
@@ -640,19 +660,23 @@ h1 { animation-delay: 0.25s; }
     </div>
     <div class="claim">
       <span class="claim-num">02</span>
-      <div class="claim-text"><strong>Multi-agent orchestration</strong> with tiered routing that minimizes LLM calls through pattern matching and direct dispatch</div>
+      <div class="claim-text"><strong>Multi-agent deliberation</strong> &mdash; planner, coach, and coder agents reach consensus on a shared blackboard before any action executes (Phase 40 joint-intention architecture)</div>
     </div>
     <div class="claim">
       <span class="claim-num">03</span>
-      <div class="claim-text"><strong>Self-modification</strong> through blue-green deployment with anchor validation, health checks, and automatic rollback</div>
+      <div class="claim-text"><strong>Self-modification</strong> through blue-green deployment with anchor validation, health checks, automatic rollback, and a silent drift verifier that catches semantic degradation</div>
     </div>
     <div class="claim">
       <span class="claim-num">04</span>
-      <div class="claim-text"><strong>Episodic memory</strong> that teaches the system from its own task history &mdash; learning without fine-tuning</div>
+      <div class="claim-text"><strong>Three-layer memory</strong> &mdash; LanceDB semantic search (BM25+RRF+FlashRank rerank), SQLite episodic outcomes, SQLite core state. Hybrid retrieval with temporal decay. No fine-tuning needed.</div>
     </div>
     <div class="claim">
       <span class="claim-num">05</span>
       <div class="claim-text"><strong>Self-improvement proposals</strong> &mdash; the system observes its own health, researches better patterns, and suggests changes to its operator through a three-tiered proposal pipeline</div>
+    </div>
+    <div class="claim">
+      <span class="claim-num">06</span>
+      <div class="claim-text"><strong>Voice + Discord bridge</strong> &mdash; local Moonshine STT + Kokoro TTS for voice I/O; Discord bot for remote task submission, proposal management, and status checks from your phone</div>
     </div>
   </div>
 </section>
@@ -701,7 +725,7 @@ h1 { animation-delay: 0.25s; }
       <div class="tier-cell">
         <div class="tier-label">Tier 2</div>
         <div class="tier-name">LLM Coach</div>
-        <div class="tier-desc">Local ~14B model enriches findings with root cause analysis, confidence scores, and cross-references with episodic memory.</div>
+        <div class="tier-desc">Local GPT-OSS 20B (MoE) enriches findings with root cause analysis, confidence scores, and cross-references with three-layer memory.</div>
       </div>
       <div class="tier-cell">
         <div class="tier-label">Tier 3</div>
