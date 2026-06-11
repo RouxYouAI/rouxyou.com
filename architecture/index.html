@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RouxYou — Architecture</title>
 <meta name="description" content="Technical architecture of RouxYou: a self-evolving, fully local, multi-agent AI system on consumer hardware.">
-<meta name="author" content="Dr. Helix">
+<meta name="author" content="DJ Oetken">
 <meta property="og:title" content="RouxYou — Architecture">
 <meta property="og:description" content="How a self-evolving AI agent system runs entirely on consumer hardware with zero cloud dependencies.">
 <meta property="og:type" content="article">
@@ -339,14 +339,14 @@ footer {
 <article class="article">
 
 <div class="article-meta">
-  <span>Dr. Helix & Claude</span>
+  <span>DJ Oetken & Claude</span>
   <span>Updated April 9, 2026</span>
   <span>Architecture Document &mdash; Phase 44</span>
 </div>
 
 <h1>A Self-Evolving, Sovereign AI Agent System on Consumer Hardware</h1>
 
-<p class="lede">RouxYou is a fully local, self-modifying, multi-agent AI system that runs entirely on consumer-grade hardware with zero cloud dependencies. It combines local LLM inference, multi-agent deliberation (planner/coach/coder agents reaching consensus on a shared blackboard before execution), safe self-modification through a blue-green deployment pipeline, a three-layer memory architecture (LanceDB semantic, SQLite episodic, SQLite core state), a silent drift verifier that catches semantic degradation, and a three-tiered proposal system that lets the system suggest its own improvements &mdash; all running on a single desktop with a mid-range NVIDIA GPU (16GB VRAM) and 32GB DDR4 RAM. Voice I/O via Moonshine STT + Kokoro TTS. Remote access via a Discord bot bridge. No data leaves the network. The system answers to its operator and no one else.</p>
+<p class="lede">RouxYou is a fully local, self-modifying, multi-agent AI system that runs entirely on consumer-grade hardware with zero cloud dependencies. It combines local LLM inference, multi-agent deliberation (planner/coach/coder agents reaching consensus on a shared blackboard before execution), safe self-modification through a blue-green deployment pipeline, a three-layer memory architecture (LanceDB semantic, SQLite episodic, SQLite core state), a silent drift verifier that catches semantic degradation, and a three-tiered proposal system that lets the system suggest its own improvements &mdash; all running on a single desktop with a mid-range NVIDIA GPU (16GB VRAM) and 32GB DDR4 RAM. Voice I/O via faster-whisper STT + kitten TTS. Remote access via a Discord bot bridge. No data leaves the network. The system answers to its operator and no one else.</p>
 
 <h2>The Problem</h2>
 
@@ -377,7 +377,7 @@ footer {
      ┌──────┴───────┐    │    ┌───────┴──────┐
      │ Orchestrator │    │    │  Watchtower   │  :8010
      │    :8001     │    │    │  supervisor   │
-     │ ministral-3B │    │    └───────┬───────┘
+     │ Qwen 1.5B    │    │    └───────┬───────┘
      └──────┬───────┘    │            │
             │            │    ┌───────┴──────┐
        ┌────┴────┐       │   │  Cron/Coach   │  :8012
@@ -387,7 +387,7 @@ footer {
   ┌────┴───┐ ┌───┴───┐   │   ┌──────────────┐
   │ Coder  │ │Worker │   │   │  Messaging   │  :8013
   │ :8002  │ │ :8003 │   │   │  Discord bot │
-  │ 20B    │ │ 20+   │   │   └──────────────┘
+  │ 30B    │ │ 20+   │   │   └──────────────┘
   │ MoE    │ │ caps  │   │
   └────────┘ └───────┘   │
                          │
@@ -402,7 +402,7 @@ footer {
 <p>A reverse proxy and route table that serves as the single entry point for all requests. The Gateway maintains a mapping of active services, enabling hot-swapping between production and staging instances during self-modification deployments. Clients never see a blip during upgrades.</p>
 
 <h3>The Orchestrator</h3>
-<p>The system's intent classifier, task queue, and Phase 40 deliberation coordinator, powered by ministral-3B (~3GB VRAM) for fast classification with confidence-based escalation to GPT-OSS 20B on ambiguity. The Orchestrator drives the joint-intention architecture:</p>
+<p>The system's intent classifier, task queue, and Phase 40 deliberation coordinator, powered by a Qwen 1.5B router LoRA (CPU) for fast classification with confidence-based escalation to the Qwen3-30B-A3B reasoning model on ambiguity. The Orchestrator drives the joint-intention architecture:</p>
 <ul>
   <li><strong>Tier 0:</strong> Pattern-matched greetings and status checks &mdash; instant response, zero LLM calls</li>
   <li><strong>Tier 1:</strong> Simple, well-defined tasks (file operations, web searches, system queries) &mdash; dispatched directly to the Worker via pattern matching, bypassing the Coder entirely</li>
@@ -411,7 +411,7 @@ footer {
 <p>The Orchestrator also manages a persistent task queue with priority levels (urgent, normal, background), pause/resume controls, abort capabilities, and a full execution history. Approved proposals from the Watchtower layer enter this same queue, creating a unified pipeline for both human-initiated and system-initiated work.</p>
 
 <h3>The Coder</h3>
-<p>The deep reasoning engine, running GPT-OSS 20B (Mixture of Experts, 3.6B active parameters, ~13GB VRAM, 4x faster than the previous Qwen 14B). In Phase 40 driver mode, the Coder participates in multi-agent deliberation alongside the Planner and Coach agents, reaching consensus on a shared blackboard before execution. All JSON-returning LLM calls go through a shared retry helper (llm_json_retry) with schema-reminder retries on malformed output.</p>
+<p>The deep reasoning engine, running a custom Qwen3-30B-A3B merge (Mixture of Experts, ~3B active parameters, ~15GB VRAM); code generation is handed to qwen3-coder:30b-a3b via an automatic GPU arbiter swap. In driver mode, the Coder participates in multi-agent deliberation alongside the Planner and Coach agents, reaching consensus on a shared blackboard before execution. All JSON-returning LLM calls go through a shared retry helper (llm_json_retry) with schema-reminder retries on malformed output.</p>
 
 <h3>The Worker</h3>
 <p>A unified execution engine with 20+ built-in capabilities and <strong>no LLM overhead</strong>. The Worker is pure Python &mdash; deterministic, fast, and predictable. Capabilities include filesystem operations (read, write, edit, copy, move, delete, directory trees), command execution, web search via a self-hosted search engine, multi-file operations, content search with regex support, screen capture and vision analysis, code verification, and deploy pipeline integration. The Worker is the primary target of self-modification &mdash; when RouxYou improves itself, it most often extends the Worker's capabilities.</p>
@@ -439,7 +439,7 @@ footer {
 <p>Six pure-Python observers run every 30 minutes with zero LLM overhead. They check service health (are all agents responding?), memory pressure (is the episodic store bloated?), codebase drift (are there stale files or unused imports?), task queue health (are tasks stuck or failing repeatedly?), resource usage (disk space, log file sizes), and skill utilization (are capabilities going unused?).</p>
 
 <h3>Tier 2 &mdash; LLM Coach Enrichment</h3>
-<p>Raw findings from Tier 1 are passed to GPT-OSS 20B for analysis. The Coach enriches proposals with root cause analysis, confidence scores (0.0&ndash;1.0), suggested remediation strategies, and cross-references with three-layer memory to detect recurring patterns. Priority is adjusted dynamically &mdash; an issue that recurs three times gets escalated automatically.</p>
+<p>Raw findings from Tier 1 are passed to the local Qwen3-30B-A3B model for analysis. The Coach enriches proposals with root cause analysis, confidence scores (0.0&ndash;1.0), suggested remediation strategies, and cross-references with three-layer memory to detect recurring patterns. Priority is adjusted dynamically &mdash; an issue that recurs three times gets escalated automatically.</p>
 
 <h3>Tier 3 &mdash; Web Research</h3>
 <p>A daily scheduled task searches the web via a self-hosted search engine for improvement patterns relevant to the system's technology stack. Seven rotating topic areas are covered over a weekly cycle: agent orchestration, memory retrieval, local LLM inference, deployment reliability, code intelligence, scheduling automation, and emerging patterns. Search results are evaluated by the local LLM for relevance and actionability. Only concrete, implementable findings with relevance scores above 0.6 are published as proposals.</p>
@@ -638,6 +638,18 @@ footer {
     <div class="timeline-date">April 8&ndash;9, 2026</div>
     <div class="timeline-text">Phase 44: Cross-agent prompt audit with 14/14 bigbrain replay recovery. Classifier escalation (ministral &rarr; GPT-OSS 20B on ambiguity). Shared llm_json_retry helper across all JSON-returning LLM calls. Discord bot for remote access. Nightly digest + autonomous night-shift queue processor. 16+ commits in one overnight session.</div>
   </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">April&ndash;May 2026</div>
+    <div class="timeline-text">Backbone migration. GGUF/Ollama serving (3&times; faster, ~35% less VRAM). A custom Qwen3-30B-A3B MoE merge (&ldquo;TheSeed&rdquo;) replaces the prior reasoning stack, with qwen3-coder:30b-a3b sharing the single GPU via an automatic arbiter swap. A trained voice LoRA &mdash; the system speaks in its own voice.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">May 2026</div>
+    <div class="timeline-text">Earned-autonomy trust ledger. Before the system may self-modify unsupervised, it must accumulate verified clean outcomes &mdash; graduation requires 25 clean events, zero false-passes, and a bounded false-block rate inside a decaying window. Tier-0 safety layer: the supervisor, verifiers, and governance files cannot be modified by the autonomous loop; root-owned snapshots make reversibility the real guarantee.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">June 2026</div>
+    <div class="timeline-text">The Guardian turn. RouxYou extends beyond the desktop into the home and network &mdash; local voice satellites, Home Assistant device control (lighting, BLE fixtures), and a segmented network island. A sovereign home and security layer: still fully local, still answering only to its operator.</div>
+  </div>
 </div>
 
 <div class="section-break"></div>
@@ -646,17 +658,19 @@ footer {
 
 <p><strong>Hardware:</strong> Mid-range consumer desktop &mdash; Intel CPU, NVIDIA RTX 5060 Ti (16GB VRAM), 32GB DDR4 RAM. No datacenter hardware. No cloud compute.</p>
 
-<p><strong>Router LLM:</strong> ministral-3B (~3GB VRAM) for intent classification, routing, and conversational responses. Confidence-based escalation to the reasoning model on ambiguity (Phase 44a).</p>
+<p><strong>Router LLM:</strong> a fine-tuned Qwen 1.5B router (LoRA, CPU-pinned) for intent classification, routing, and conversational responses. Confidence-based escalation to the reasoning model on ambiguity.</p>
 
-<p><strong>Reasoning LLM:</strong> GPT-OSS 20B (Mixture of Experts, 3.6B active parameters, ~13GB VRAM). Deep reasoning, code generation, multi-step planning, proposal enrichment, Phase 40 deliberation agents, and web research evaluation.</p>
+<p><strong>Reasoning &amp; Voice LLM:</strong> a custom Qwen3-30B-A3B merge ("TheSeed" &mdash; Mixture of Experts, ~3B active parameters, ~15GB VRAM, served via llama.cpp/Vulkan). Deep reasoning, the system's own voice, multi-step planning, proposal enrichment, deliberation, and web research evaluation.</p>
 
-<p><strong>Embeddings:</strong> nomic-embed-text-v2-moe (475M MoE, 768 dimensions). Powers the hybrid search pipeline across 36,000+ memories.</p>
+<p><strong>Coder LLM:</strong> qwen3-coder:30b-a3b (MoE) for code generation and patching. Shares the single GPU with the reasoning model through an automatic arbiter swap.</p>
 
-<p><strong>TTS:</strong> Kokoro v1.0 ONNX (82M parameters, CPU inference, 54 voices). Local text-to-speech on port 5100.</p>
+<p><strong>Embeddings:</strong> nomic-embed-text (CPU). Powers the hybrid search pipeline across 37,000+ memories.</p>
 
-<p><strong>STT:</strong> Moonshine v2 base-en (245M parameters, CPU inference, 9.6x realtime). Local speech-to-text with VAD wake-word pipeline.</p>
+<p><strong>TTS:</strong> kitten TTS &mdash; local text-to-speech on port 5100.</p>
 
-<p><strong>Bigbrain (escalation):</strong> Claude Sonnet via Anthropic API. Used for silent drift verification and complex reasoning that exceeds local model capabilities. Explicit human-initiated only.</p>
+<p><strong>STT:</strong> faster-whisper &mdash; local speech-to-text with VAD and an on-device wake-word pipeline.</p>
+
+<p><strong>Bigbrain (escalation):</strong> Claude Opus 4.8 via Anthropic API. Used for executor review, drift verification, and complex reasoning that exceeds local model capabilities. A checked exception, not the default &mdash; the system is designed to run fully offline.</p>
 
 <p><strong>Language:</strong> Python. Dashboard built with Streamlit.</p>
 
@@ -710,7 +724,7 @@ footer {
 </article>
 
 <footer>
-  <span class="footer-left">&copy; 2026 Dr. Helix &amp; Claude &mdash; rouxyou.com</span>
+  <span class="footer-left">&copy; 2026 DJ Oetken &amp; Claude &mdash; rouxyou.com</span>
   <div class="footer-right">
     <a href="/">Home</a>
     <a href="https://github.com/RouxYouAI">GitHub</a>
