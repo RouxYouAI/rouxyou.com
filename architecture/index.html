@@ -340,8 +340,8 @@ footer {
 
 <div class="article-meta">
   <span>DJ Oetken & Claude</span>
-  <span>Updated April 9, 2026</span>
-  <span>Architecture Document &mdash; Phase 44</span>
+  <span>Updated June 22, 2026</span>
+  <span>Architecture Document &mdash; Living</span>
 </div>
 
 <h1>A Self-Evolving, Sovereign AI Agent System on Consumer Hardware</h1>
@@ -441,14 +441,15 @@ footer {
 <h3>Tier 2 &mdash; LLM Coach Enrichment</h3>
 <p>Raw findings from Tier 1 are passed to the local Qwen3-30B-A3B model for analysis. The Coach enriches proposals with root cause analysis, confidence scores (0.0&ndash;1.0), suggested remediation strategies, and cross-references with three-layer memory to detect recurring patterns. Priority is adjusted dynamically &mdash; an issue that recurs three times gets escalated automatically.</p>
 
-<h3>Tier 3 &mdash; Web Research</h3>
-<p>A daily scheduled task searches the web via a self-hosted search engine for improvement patterns relevant to the system's technology stack. Seven rotating topic areas are covered over a weekly cycle: agent orchestration, memory retrieval, local LLM inference, deployment reliability, code intelligence, scheduling automation, and emerging patterns. Search results are evaluated by the local LLM for relevance and actionability. Only concrete, implementable findings with relevance scores above 0.6 are published as proposals.</p>
+<h3>Tier 3 &mdash; Knowledge Ingestion</h3>
+<p>The system curates an external-knowledge inbox: research notes and digests dropped into a watched directory are ingested on a schedule, embedded into a dedicated memory era, and surfaced to the reflection loop as grounded improvement fuel. This replaced an earlier self-hosted web-search tier &mdash; operator-curated ingestion yields cleaner, on-thesis signal than open web scraping, and keeps the system's self-improvement honest and grounded. Only concrete, source-grounded findings are published as proposals.</p>
 
 <h3>The Proposal Bus</h3>
 <p>All three tiers publish to a shared data structure with persistent state. Each proposal carries a title, description, category, priority (1&ndash;10), source attribution, confidence score, evidence, suggested executor, and reversibility flag. Proposals track their full lifecycle: pending, approved, executing, completed, failed, or dismissed. Dismissed proposals enter a cooldown period to prevent re-proposal.</p>
 
 <h3>Human Approval Gate</h3>
 <p>Every proposal requires human approval through the dashboard before execution. The operator sees the evidence, the Coach's reasoning, the confidence score, and the proposed action. Approved proposals enter the Orchestrator's task queue as first-class tasks &mdash; the same queue that handles human-initiated work. This means every proposal's outcome is recorded in episodic memory, creating a feedback loop: the system learns from the results of its own suggestions.</p>
+<p>The gate is also <em>earned down</em> over time. An asymmetric trust ledger tracks the system&rsquo;s verified outcomes per change-class; only after it accumulates enough clean, independently-verified results &mdash; with zero false-passes and a bounded false-block rate inside a decaying window &mdash; does that class of change graduate to running unsupervised. Trust is earned per category, never granted wholesale, and the immutable safety layer (supervisor, verifiers, governance files) never graduates.</p>
 
 <div class="callout">
   <p>The Proposal System is not a separate agent. It's a capability layer that any part of the system can contribute to (heuristics, LLM analysis, web research) and the Orchestrator consumes. The system's "Coach" is emergent &mdash; it arises from the interaction of observation, enrichment, and memory, not from a single monolithic component.</p>
@@ -650,6 +651,14 @@ footer {
     <div class="timeline-date">June 2026</div>
     <div class="timeline-text">The Guardian turn. RouxYou extends beyond the desktop into the home and network &mdash; local voice satellites, Home Assistant device control (lighting, BLE fixtures), and a segmented network island. A sovereign home and security layer: still fully local, still answering only to its operator.</div>
   </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">June 19&ndash;20, 2026</div>
+    <div class="timeline-text">The cockpit. A gen-2 dashboard built from scratch &mdash; Next.js + React Three Fiber: a live 3D map of the system&rsquo;s own modules firing in real time, interactive decks for the trust ledger and self-modification gate, and a streaming chat that surfaces the model&rsquo;s reasoning as it thinks. The face of the system.</div>
+  </div>
+  <div class="timeline-entry">
+    <div class="timeline-date">June 21&ndash;22, 2026</div>
+    <div class="timeline-text">Sovereign wake-word training. Custom on-device wake-word models trained <em>locally</em> on the consumer Blackwell GPU (RTX 5060 Ti, sm_120) &mdash; no cloud pod &mdash; then flashed to a local voice satellite. The full voice loop, end to end, on owned hardware.</div>
+  </div>
 </div>
 
 <div class="section-break"></div>
@@ -672,7 +681,7 @@ footer {
 
 <p><strong>Bigbrain (escalation):</strong> Claude Opus 4.8 via Anthropic API. Used for executor review, drift verification, and complex reasoning that exceeds local model capabilities. A checked exception, not the default &mdash; the system is designed to run fully offline.</p>
 
-<p><strong>Language:</strong> Python. Dashboard built with Streamlit.</p>
+<p><strong>Language:</strong> Python for services and agents; TypeScript/React for the interface. The current dashboard is a gen-2 &ldquo;cockpit&rdquo; built with Next.js + React Three Fiber &mdash; a live 3D map of the system&rsquo;s own modules firing in real time, interactive decks for the trust ledger and self-modification gate, and a streaming chat that surfaces the model&rsquo;s reasoning as it thinks. A gen-1 Streamlit dashboard preceded it.</p>
 
 <p><strong>Infrastructure:</strong> All supporting services (search engine, home automation, monitoring) self-hosted on local network hardware. All services run on the local network.</p>
 
